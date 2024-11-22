@@ -9,11 +9,12 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173", // Replace with your frontend URL
+    origin: "https://chess-backend-1-728q.onrender.com", // Updated to your frontend URL
     methods: ["GET", "POST"], // Allow specific methods
     credentials: true, // Allow cookies if needed
   },
 });
+
 const PORT = process.env.PORT || 5000;
 const games = {};
 const waitingQueue = [];
