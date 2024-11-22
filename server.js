@@ -9,7 +9,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "https://chess-backend-1-728q.onrender.com", // Updated to your frontend URL
+    origin: "https://chess-frontend-tau.vercel.app", // Updated to your frontend URL
     methods: ["GET", "POST"], // Allow specific methods
     credentials: true, // Allow cookies if needed
   },
