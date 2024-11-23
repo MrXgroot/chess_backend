@@ -6,15 +6,12 @@ const { Server } = require("socket.io");
 const { Chess } = require("chess.js");
 const app = express();
 const server = http.createServer(app);
-
-const io = new Server(server, {
-  cors: {
-    origin: "https://chess-mania-mrxgroot.vercel.app", // Updated to your frontend URL
-    methods: ["GET", "POST"], // Allow specific methods
-    credentials: true, // Allow cookies if needed
-  },
-});
-
+const corsOptions = {
+  origin: "https://chess-mania-mrxgroot.vercel.app",
+  methods: ["GET", "POST"],
+  credentials: true,
+};
+const io = new Server(server, { cors: corsOptions });
 const PORT = process.env.PORT || 5000;
 const games = {};
 const waitingQueue = [];
@@ -23,6 +20,7 @@ io.on("connection", (socket) => {
   console.log("user connnected", socket.id);
 
   socket.on("createGame", () => {
+    if (socket.gameId) return;
     gameId = `game-${Date.now()}`;
     games[gameId] = {
       chess: new Chess(),
@@ -30,11 +28,12 @@ io.on("connection", (socket) => {
     };
     socket.join(gameId);
     socket.gameId = gameId;
-    socket.emit("gameCreated", { gameId, role: "white" }); //can change later
+    socket.emit("gameCreated", { gameId, role: "white" });
     console.log(`Game created: ${gameId}`);
   });
 
   socket.on("joinRandom", () => {
+    if (waitingQueue.includes(socket)) return;
     if (waitingQueue.length !== 0) {
       const gameId = `game-${Date.now()}`;
 
@@ -84,7 +83,6 @@ io.on("connection", (socket) => {
     } catch (e) {}
 
     if (result == null || result == undefined || !result) {
-      // socket.emit('error','Invalid move');
       return;
     }
     if (game.chess.isGameOver()) {
@@ -102,10 +100,10 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("player Disconnected");
     if (socket.gameId) {
+      io.to(socket.gameId).emit("matchClosed", "Opponent left the game");
       delete games[socket.gameId];
       console.log("game deleted");
       console.log("socket.gameId", socket.gameId);
-      io.to(socket.gameId).emit("matchClosed", "Opponent left the game");
     }
 
     //remove the waiting queue
